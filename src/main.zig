@@ -1,7 +1,7 @@
 const std = @import("std");
 const benchmark = @import("benchmark.zig");
 const Allocator = std.mem.Allocator;
-const autoring = @import("root.zig");
+const autoring = @import("autoring.zig");
 
 pub fn main() !void {
     (try benchmark.run(enqueueOneThousandIters)).print("enqueue 1_000 iters");
@@ -11,7 +11,7 @@ pub fn main() !void {
 fn enqueueOneThousandIters(allocator: Allocator, timer: *std.time.Timer) !void {
     timer.reset();
 
-    const queue = try autoring.Queue(u32).init(allocator, 1024);
+    const queue = try autoring.Autoring(u32).init(allocator, 1024);
     defer queue.deinit();
 
     for (0..1_000) |i| {
@@ -22,7 +22,7 @@ fn enqueueOneThousandIters(allocator: Allocator, timer: *std.time.Timer) !void {
 fn enqueueOneMillionIters(allocator: Allocator, timer: *std.time.Timer) !void {
     timer.reset();
 
-    const queue = try autoring.Queue(u32).init(allocator, 1024);
+    const queue = try autoring.Autoring(u32).init(allocator, 1024);
     defer queue.deinit();
 
     for (0..1_000_000) |i| {
