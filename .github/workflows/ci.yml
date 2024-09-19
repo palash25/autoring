@@ -10,4 +10,4 @@ jobs:
             sudo snap install zig --classic --edge
             zig version
       - name: test
-        run: zig test src/root.zig
+        run: zig test src/autoring.zig
