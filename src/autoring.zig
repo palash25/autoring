@@ -8,6 +8,7 @@ const testing = std.testing;
 
 pub const AutoringError = error{EmptyQueue};
 
+/// Returns a non thread safe ring buffer type with dynamic resizing
 pub fn Autoring(comptime T: type) type {
     const min_len = 16;
 
@@ -20,6 +21,8 @@ pub fn Autoring(comptime T: type) type {
 
         const Self = @This();
 
+        /// Initializes the ring buffer with the given length if provided.
+        /// `length` must be a power of 2 otherwise it will panic.
         pub fn init(allocator: std.mem.Allocator, length: ?usize) !*Self {
             const len = length orelse min_len;
             assert(math.isPowerOfTwo(len));
@@ -40,6 +43,7 @@ pub fn Autoring(comptime T: type) type {
             self.allocator.destroy(self);
         }
 
+        /// Adds an element to the tail end of the queue.
         pub fn enqueue(self: *Self, element: T) !void {
             if (self.count == self.buf.len) try self.resize();
 
@@ -48,11 +52,13 @@ pub fn Autoring(comptime T: type) type {
             self.count += 1;
         }
 
+        /// Returns a copy of the element at the head of the queue.
         pub fn peek(self: *Self) AutoringError!T {
             if (self.count == 0) return AutoringError.EmptyQueue;
             return self.buf[self.head];
         }
 
+        /// Removes and returns the element at the head of the queue.
         pub fn dequeue(self: *Self) AutoringError!T {
             if (self.count == 0) return AutoringError.EmptyQueue;
 
