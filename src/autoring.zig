@@ -13,7 +13,8 @@ pub fn Autoring(comptime T: type) type {
     const min_len = 16;
 
     return struct {
-        buf: []T,
+        // users should not read/write directly from/to raw_buf
+        raw_buf: []T,
         head: usize,
         tail: usize,
         count: usize,
@@ -29,7 +30,7 @@ pub fn Autoring(comptime T: type) type {
 
             const queue = try allocator.create(Self);
             queue.* = Self{
-                .buf = try allocator.alloc(T, len),
+                .raw_buf = try allocator.alloc(T, len),
                 .head = 0,
                 .tail = 0,
                 .count = 0,
@@ -39,34 +40,34 @@ pub fn Autoring(comptime T: type) type {
         }
 
         pub fn deinit(self: *Self) void {
-            self.allocator.free(self.buf);
+            self.allocator.free(self.raw_buf);
             self.allocator.destroy(self);
         }
 
         /// Adds an element to the tail end of the queue.
         pub fn enqueue(self: *Self, element: T) !void {
-            if (self.count == self.buf.len) try self.resize();
+            if (self.count == self.raw_buf.len) try self.resize();
 
-            self.buf[self.tail] = element;
-            self.tail = (self.tail + 1) & (self.buf.len - 1);
+            self.raw_buf[self.tail] = element;
+            self.tail = (self.tail + 1) & (self.raw_buf.len - 1);
             self.count += 1;
         }
 
         /// Returns a copy of the element at the head of the queue.
         pub fn peek(self: *Self) AutoringError!T {
             if (self.count == 0) return AutoringError.EmptyQueue;
-            return self.buf[self.head];
+            return self.raw_buf[self.head];
         }
 
         /// Removes and returns the element at the head of the queue.
         pub fn dequeue(self: *Self) AutoringError!T {
             if (self.count == 0) return AutoringError.EmptyQueue;
 
-            const element = self.buf[self.head];
+            const element = self.raw_buf[self.head];
             // For now we can't set dequeued slots to null
             // as using a []?T was complicating our code
-            //self.buf[self.head] = null;
-            self.head = (self.head + 1) & (self.buf.len - 1);
+            //self.raw_buf[self.head] = null;
+            self.head = (self.head + 1) & (self.raw_buf.len - 1);
             self.count -= 1;
 
             return element;
@@ -76,14 +77,14 @@ pub fn Autoring(comptime T: type) type {
             const new_buf = try self.allocator.alloc(T, self.count << 1);
 
             if (self.tail > self.head) {
-                copyForwards(T, new_buf, self.buf[self.head..self.tail]);
+                copyForwards(T, new_buf, self.raw_buf[self.head..self.tail]);
             } else {
-                copyForwards(T, new_buf, self.buf[self.head..]);
-                copyForwards(T, new_buf[(self.buf.len - self.head)..], self.buf[0..self.tail]);
+                copyForwards(T, new_buf, self.raw_buf[self.head..]);
+                copyForwards(T, new_buf[(self.raw_buf.len - self.head)..], self.raw_buf[0..self.tail]);
             }
             self.head = 0;
             self.tail = self.count;
-            self.buf = new_buf;
+            self.raw_buf = new_buf;
         }
     };
 }
@@ -98,7 +99,7 @@ test "enqueue dequeue" {
 
     try testing.expectError(AutoringError.EmptyQueue, q.dequeue());
     try testing.expectError(AutoringError.EmptyQueue, q.peek());
-    assert(q.buf.len == 16);
+    assert(q.raw_buf.len == 16);
 
     // Next we fill up the queue except the last element
     // +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
