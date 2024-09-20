@@ -6,37 +6,28 @@ Autoring isn't a true ring buffer since it doesn't have a fixed size. It follows
 - but the queue also resizes to allocate a bigger space
 
 ## Benchmark results
-It seems that with lesser iterations of the benchmark we get slower results.
-Does this have to do with cache warm up or something?
-
-- 1 thousand enqueue iterations
-```
-simpleBenchmark
-  197 iterations        15188249.32ns per iterations
-  4190208 bytes per iteration
-  worst: 17702154ns     median: 15160169ns      stddev: 1126814.16ns
-```
-
-- 1 million enqueue iterations
-```
-zig run src/main.zig
-simpleBenchmark
-  27655 iterations      107903.74ns per iterations
-  0 bytes per iteration
-  worst: 261545ns       median: 105873ns        stddev: 10676.51ns
-```
-
-- both together
+On average the queue can enqueue a million elemetns in around 14ms, in other words around 100 million elements in 1.4 seconds. The cache misses are around 22-24% of all cache references.
 
 ```
+ perf stat -e cache-misses,cache-references  zig run src/main.zig
 enqueue 1_000 iters
-  27832 iterations	107547.50ns per iterations
+  93039 iterations      106545.31ns per iterations
   0 bytes per iteration
-  worst: 275526ns	median: 105768ns	stddev: 10462.72ns
+  worst: 277738ns       median: 104584ns        stddev: 10604.10ns
 
 enqueue 1_000_000 iters
-  201 iterations	14893385.96ns per iterations
-  4190208 bytes per iteration
-  worst: 19306108ns	median: 14821342ns	stddev: 1185330.34ns
+  706 iterations        14146449.68ns per iterations
+  4128768 bytes per iteration
+  worst: 25658953ns     median: 13978585ns      stddev: 900961.11ns
 
+
+ Performance counter stats for 'zig run src/main.zig':
+
+           256,901      cache-misses:u                   #   22.35% of all cache refs         
+         1,149,444      cache-references:u                                                    
+
+      22.665147797 seconds time elapsed
+
+      14.170373000 seconds user
+       8.455382000 seconds sys
 ```
