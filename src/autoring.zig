@@ -18,6 +18,7 @@ pub fn Autoring(comptime T: type) type {
         head: usize,
         tail: usize,
         count: usize,
+        bitmask: usize,
         allocator: std.mem.Allocator,
 
         const Self = @This();
@@ -34,6 +35,7 @@ pub fn Autoring(comptime T: type) type {
                 .head = 0,
                 .tail = 0,
                 .count = 0,
+                .bitmask = len - 1,
                 .allocator = allocator,
             };
             return queue;
@@ -49,7 +51,8 @@ pub fn Autoring(comptime T: type) type {
             if (self.count == self.raw_buf.len) try self.resize();
 
             self.raw_buf[self.tail] = element;
-            self.tail = (self.tail + 1) & (self.raw_buf.len - 1);
+            // will storing this bit mask once somewhere help with perf?
+            self.tail = (self.tail + 1) & self.bitmask;
             self.count += 1;
         }
 
@@ -67,7 +70,7 @@ pub fn Autoring(comptime T: type) type {
             // For now we can't set dequeued slots to null
             // as using a []?T was complicating our code
             //self.raw_buf[self.head] = null;
-            self.head = (self.head + 1) & (self.raw_buf.len - 1);
+            self.head = (self.head + 1) & self.bitmask;
             self.count -= 1;
 
             return element;
@@ -85,6 +88,7 @@ pub fn Autoring(comptime T: type) type {
             self.head = 0;
             self.tail = self.count;
             self.raw_buf = new_buf;
+            self.bitmask = (self.raw_buf.len - 1);
         }
     };
 }
