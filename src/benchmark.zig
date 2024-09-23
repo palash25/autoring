@@ -1,3 +1,4 @@
+// copied from https://github.com/karlseguin/benchmark.zig/tree/master
 const std = @import("std");
 
 const Timer = std.time.Timer;
