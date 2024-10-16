@@ -1,5 +1,3 @@
-// Ported from https://github.com/eapache/queue/tree/main
-
 const std = @import("std");
 const assert = std.debug.assert;
 const math = std.math;
