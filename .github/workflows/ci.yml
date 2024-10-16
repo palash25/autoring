@@ -1,7 +1,7 @@
 name: CI
 on: [push]
 jobs:
-  test:
+  autoring:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -9,5 +9,7 @@ jobs:
         run: |
             sudo snap install zig --classic --edge
             zig version
+      - name: build
+        run: zig build
       - name: test
         run: zig test src/autoring.zig
