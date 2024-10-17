@@ -78,10 +78,11 @@ pub fn Autoring(comptime T: type) type {
             const new_buf = try self.allocator.alloc(T, self.count << 1);
 
             if (self.tail > self.head) {
-                copyForwards(T, new_buf, self.raw_buf[self.head..self.tail]);
+                @memcpy(new_buf, self.raw_buf[self.head..self.tail]);
             } else {
-                copyForwards(T, new_buf, self.raw_buf[self.head..]);
-                copyForwards(T, new_buf[(self.raw_buf.len - self.head)..], self.raw_buf[0..self.tail]);
+                const idx = self.raw_buf.len - self.head;
+                @memcpy(new_buf[0..idx], self.raw_buf[self.head..]);
+                @memcpy(new_buf[idx..(idx + self.tail)], self.raw_buf[0..self.tail]);
             }
             self.head = 0;
             self.tail = self.count;
